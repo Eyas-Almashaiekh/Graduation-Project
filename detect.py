@@ -10,7 +10,6 @@ from mediapipe.tasks.python import vision
 from utils import visualize
 
 
-
 def run(model: str, camera_id: int, width: int, height: int) -> None:
     # Setup RabbitMQ connection
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
@@ -29,7 +28,7 @@ def run(model: str, camera_id: int, width: int, height: int) -> None:
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
     def visualize_callback(result: vision.ObjectDetectorResult, output_image: mp.Image, timestamp_ms: int):
-        global last_detection, detection_streak
+        nonlocal last_detection, detection_streak  # Use nonlocal to modify outer scope variables
         current_detection = [{'label': det.categories[0].category_name, 'score': det.categories[0].score}
                              for det in result.detections]
         most_confident_detection = max(current_detection, key=lambda x: x['score']) if current_detection else None
@@ -48,7 +47,6 @@ def run(model: str, camera_id: int, width: int, height: int) -> None:
                                   body=json.dumps({'label': last_detection}))
             print(f"Published detection to RabbitMQ: {last_detection}")
             detection_streak = 0  # Reset after sending
-
 
     # Initialize the object detection model
     base_options = python.BaseOptions(model_asset_path=model)
@@ -103,7 +101,7 @@ def main():
     parser.add_argument(
         '--model',
         help='Path to the efficientdet.tflite model file',
-        default=r'D:\UNI\Grad_Project\efficientdet_lite2.tflite')  #input the path to your model here
+        default=r'efficientdet_lite2.tflite')  #input the path to your model here
     parser.add_argument(
         '--cameraId', help='Id of camera.', type=int, default=0)
     parser.add_argument(
